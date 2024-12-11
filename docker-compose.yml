@@ -1,0 +1,58 @@
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
+  # kafka-topics.sh --describe --topic raw --bootstrap-server kafka:9092
+  kafka:
+    image: wurstmeister/kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: "true"
+      KAFKA_CREATE_TOPICS: raw_pollution:1:1
+      KAFKA_SASL_ENABLED: false
+    depends_on:
+      - zookeeper
+  mongo:
+    image: mongo
+    environment:
+      MONGO_INITDB_DATABASE: bigdata
+    ports:
+      - "27017:27017"
+  mongo-express:
+    image: mongo-express
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mongo
+  data-fetcher-pollution:
+    build:
+      context: app/data_fetcher_pollution
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - KAFKA_TOPIC=raw_pollution
+      - API_URL=https://data.angers.fr/api/explore/v2.1/catalog/datasets/dataairplqualiteairangers/records?limit=1 # Remplacez par l'URL de l'API REST
+    depends_on:
+      - kafka
+  raw-pollution-to-mongo:
+    build:
+      context: app/raw_pollution_to_mongo
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - KAFKA_TOPIC=raw_pollution
+      - MONGO_HOST=mongo
+      - MONGO_PORT=27017
+      - MONGO_DB=bigdata
+      - MONGO_COLLECTION=raw_pollution
+    depends_on:
+      - kafka
+      - mongo
+      - data-fetcher-pollution
