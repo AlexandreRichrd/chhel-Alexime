@@ -65,6 +65,8 @@ services:
       - KAFKA_TOPIC=air_quality_topic
     depends_on:
       - kafka
+    ports:
+      - "5000:5000"
 
   grafana:
     build:
