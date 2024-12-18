@@ -17,7 +17,7 @@ services:
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: "true"
-      KAFKA_CREATE_TOPICS: raw_pollution:1:1
+      KAFKA_CREATE_TOPICS: air_quality_topic:1:1
       KAFKA_SASL_ENABLED: false
     depends_on:
       - zookeeper
@@ -56,3 +56,24 @@ services:
       - kafka
       - mongo
       - data-fetcher-pollution
+
+  api:
+    build:
+      context: ./app/api
+    environment:
+      - KAFKA_BROKER=kafka:9092
+      - KAFKA_TOPIC=air_quality_topic
+    depends_on:
+      - kafka
+
+  grafana:
+    build:
+      context: ./app/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - mongo
+      - kafka
