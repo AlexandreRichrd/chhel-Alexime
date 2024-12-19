@@ -17,7 +17,8 @@ services:
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: "true"
-      KAFKA_CREATE_TOPICS: air_quality_topic:1:1
+      KAFKA_CREATE_TOPICS: "air_quality_topic:1:1"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_SASL_ENABLED: false
     depends_on:
       - zookeeper
@@ -39,7 +40,7 @@ services:
     environment:
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
       - KAFKA_TOPIC=raw_pollution
-      - API_URL=https://data.angers.fr/api/explore/v2.1/catalog/datasets/dataairplqualiteairangers/records?limit=1 # Remplacez par l'URL de l'API REST
+      # - API_URL=https://data.angers.fr/api/explore/v2.1/catalog/datasets/indice-de-qualite-de-lair-angers-loire-metropole/records # Remplacez par l'URL de l'API REST
     depends_on:
       - kafka
   raw-pollution-to-mongo:
